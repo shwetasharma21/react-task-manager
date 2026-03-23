@@ -10,9 +10,22 @@ function TaskInput({ addTask }) {
     setInput("");
   };
   return (
-    <div>
-      <input value={input} onChange={(e) => setInput(e.target.value)} />
-      <button onClick={handleAdd}>Add Task</button>
+    <div className="d-flex gap-2 mb-2">
+      <input
+        autoFocus
+        type="text"
+        className="form-control"
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+        placeholder="Enter a task..."
+      />
+      <button
+        className="btn btn-primary btn-sm"
+        onClick={handleAdd}
+        disabled={!input.trim()}
+      >
+        Add Task
+      </button>
     </div>
   );
 }

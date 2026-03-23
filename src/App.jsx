@@ -1,9 +1,18 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import TaskInput from "./components/TaskInput";
 function App() {
-  const [tasks, setTasks] = useState([]);
+  // Load tasks from localStorage
+  const [tasks, setTasks] = useState(() => {
+    const savedTasks = localStorage.getItem("tasks");
+    return savedTasks ? JSON.parse(savedTasks) : [];
+  });
   const [editId, setEditId] = useState(null);
   const [editText, setEditText] = useState("");
+
+  // Save tasks to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem("tasks", JSON.stringify(tasks));
+  }, [tasks]);
 
   const addTask = (text) => {
     if (!text.trim()) return; // Prevent adding empty tasks
@@ -49,52 +58,74 @@ function App() {
   };
 
   return (
-    <div>
-      <h1>To-Do App</h1>
-      <TaskInput addTask={addTask} />
-      <ul>
-        {tasks.map((task) => (
-          <li
-            style={{
-              display: "flex",
-              gap: "10px",
-              alignItems: "center",
-              marginBottom: "10px",
-            }}
-            key={task.id}
-          >
-            {editId === task.id ? (
-              <>
-                <input
-                  autoFocus
-                  value={editText}
-                  onChange={(e) => setEditText(e.target.value)}
-                />
-                <button onClick={() => handleSave(task.id)}>Save</button>
-              </>
-            ) : (
-              <>
-                <input
-                  type="checkbox"
-                  checked={task.completed}
-                  onChange={() => toggleTask(task.id)}
-                />
-                <span
-                  style={{
-                    textDecoration: task.completed ? "line-through" : "none",
-                  }}
+    <div className="container d-flex justify-content-center align-items-center vh-100">
+      <div className="row w-100 justify-content-center">
+        <div className="col-12 col-sm-10 col-md-8 col-lg-6 col-xl-5">
+          <div className="card shadow p-4">
+            <h2 className="text-center mb-3">To-Do App</h2>
+            <TaskInput addTask={addTask} />
+            <ul className="list-group">
+              {tasks.map((task) => (
+                <li
+                  className="list-group-item d-flex flex-wrap align-items-center justify-content-between gap-2"
+                  key={task.id}
                 >
-                  {task.text}
-                </span>
-                <button onClick={() => startEditingTask(task)}>
-                  Edit Task
-                </button>
-                <button onClick={() => deleteTask(task.id)}>Delete Task</button>
-              </>
-            )}
-          </li>
-        ))}
-      </ul>
+                  {editId === task.id ? (
+                    <div className="d-flex gap-2 w-100">
+                      <input
+                        autoFocus
+                        className="form-control flex-grow-1"
+                        value={editText}
+                        onChange={(e) => setEditText(e.target.value)}
+                      />
+                      <button
+                        className="btn btn-success btn-sm"
+                        onClick={() => handleSave(task.id)}
+                      >
+                        Save
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="d-flex align-items-center gap-2 flex-grow-1">
+                        <input
+                          type="checkbox"
+                          checked={task.completed}
+                          onChange={() => toggleTask(task.id)}
+                        />
+                        <span
+                          style={{
+                            textDecoration: task.completed
+                              ? "line-through"
+                              : "none",
+                            wordBreak: "break-word",
+                          }}
+                        >
+                          {task.text}
+                        </span>
+                      </div>
+                      <div className="d-flex gap-2">
+                        <button
+                          className="btn btn-warning btn-sm"
+                          onClick={() => startEditingTask(task)}
+                        >
+                          Edit Task
+                        </button>
+                        <button
+                          className="btn btn-danger btn-sm"
+                          onClick={() => deleteTask(task.id)}
+                        >
+                          Delete Task
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
