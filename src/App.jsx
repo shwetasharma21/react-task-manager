@@ -1,43 +1,83 @@
 import { useState, useEffect } from "react";
 import TaskInput from "./components/TaskInput";
+import {
+  fetchTasks,
+  createTask,
+  removeTask,
+  updateTask,
+} from "./services/taskService";
+
 function App() {
-  // Load tasks from localStorage
-  const [tasks, setTasks] = useState(() => {
-    const savedTasks = localStorage.getItem("tasks");
-    return savedTasks ? JSON.parse(savedTasks) : [];
-  });
+  const [tasks, setTasks] = useState([]);
   const [editId, setEditId] = useState(null);
   const [editText, setEditText] = useState("");
 
-  // Save tasks to localStorage whenever they change
+  // Load tasks from API on component mount
   useEffect(() => {
-    localStorage.setItem("tasks", JSON.stringify(tasks));
-  }, [tasks]);
+    const loadTasks = async () => {
+      const data = await fetchTasks();
+      if (data) {
+        setTasks(data);
+      }
+    };
+    loadTasks();
+  }, []);
 
-  const addTask = (text) => {
+  // Add Task
+  const addTask = async (text) => {
     if (!text.trim()) return; // Prevent adding empty tasks
-    //setTasks([...tasks, {id: Date.now(), text}]);
-    setTasks((prevTasks) => [
-      ...prevTasks,
-      { id: Date.now(), text, completed: false },
-    ]);
-    console.log("Task added: ", text);
+
+    const newTask = await createTask(text);
+    if (newTask) {
+      //setTasks([...tasks, {id: Date.now(), text}]);
+      setTasks((prevTasks) => [
+        ...prevTasks,
+        { id: newTask.id, text, completed: false },
+      ]);
+      console.log("Task added: ", text);
+    } else {
+      console.error("Failed to add task");
+    }
   };
 
-  const deleteTask = (id) => {
-    //setTasks(tasks.filter((task) => task.id !== id));
-    setTasks((prevTasks) => prevTasks.filter((task) => task.id !== id));
-    console.log("Task deleted with id: ", id);
+  // Delete Task
+  const deleteTask = async (id) => {
+    const success = await removeTask(id);
+    if (success) {
+      //setTasks(tasks.filter((task) => task.id !== id));
+      setTasks((prevTasks) => prevTasks.filter((task) => task.id !== id));
+      console.log("Task deleted with id: ", id);
+    } else {
+      console.error("Failed to delete task");
+    }
   };
-  const toggleTask = (id) => {
+
+  // Toggle Task Completion
+  const toggleTask = async (id) => {
+    const task = tasks.find((task) => task.id === id);
+    if (!task) return;
+
+    await updateTask(id, {
+      ...task,
+      completed: !task.completed,
+    });
     setTasks((prevTasks) =>
       prevTasks.map((task) =>
         task.id === id ? { ...task, completed: !task.completed } : task,
       ),
     );
   };
-  const editTask = (id, newText) => {
+  // Edit Task
+  const editTask = async (id, newText) => {
     if (!newText.trim()) return; // Prevent setting empty text
+
+    const task = tasks.find((task) => task.id === id);
+    if (!task) return;
+
+    await updateTask(id, {
+      ...task,
+      text: newText,
+    });
 
     setTasks((prevTasks) =>
       prevTasks.map((task) =>
